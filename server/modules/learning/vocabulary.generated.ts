@@ -1,4 +1,4 @@
-[
+export const GENERATED_VOCABULARY = [
   {
     "id": 1,
     "title": "自然地理",
@@ -13291,4 +13291,4 @@
       }
     ]
   }
-]
+];

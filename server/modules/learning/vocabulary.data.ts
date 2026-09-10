@@ -3,7 +3,7 @@ import type {
   VocabularyWord,
 } from '@shared/api.interface';
 
-import generatedVocabulary from './vocabulary.generated.json';
+import { GENERATED_VOCABULARY } from './vocabulary.generated';
 
 const CHAPTER_SUBTITLES: string[] = [
   '地球结构、气候与自然现象',
@@ -36,7 +36,7 @@ interface GeneratedChapter {
   words: VocabularyWord[];
 }
 
-const generatedChapters: GeneratedChapter[] = generatedVocabulary;
+const generatedChapters: GeneratedChapter[] = GENERATED_VOCABULARY;
 
 export const VOCABULARY_CHAPTERS: VocabularyChapter[] =
   generatedChapters.map(
