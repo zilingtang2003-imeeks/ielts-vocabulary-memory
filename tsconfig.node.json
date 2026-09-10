@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist",
+    "resolveJsonModule": true,
     "preserveWatchOutput": true,
     "paths": {
       "@server/*": ["server/*"],
@@ -12,6 +13,6 @@
   "watchOptions": {
     "excludeDirectories": ["node_modules/**"]
   },
-  "include": ["server/**/*", "shared/**/*.ts"],
+  "include": ["server/**/*", "server/**/*.json", "shared/**/*.ts"],
   "exclude": ["node_modules", "dist", "client", "source_package", "**/*.spec.ts", "**/*.e2e-spec.ts"],
 }

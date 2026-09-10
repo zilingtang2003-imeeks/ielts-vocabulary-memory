@@ -233,12 +233,14 @@ const LearningPage: React.FC = () => {
               ) : (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <h2 className="text-3xl font-semibold text-[#243b53]">{currentWord.meaning}</h2>
-                  <div className="mt-7 rounded-2xl bg-[#f4f1ea] p-5">
-                    <p className="font-serif text-xl leading-relaxed">{currentWord.example}</p>
-                    <p className="mt-2 text-sm leading-relaxed text-stone-500">
-                      {currentWord.exampleMeaning}
-                    </p>
-                  </div>
+                  {currentWord.example && (
+                    <div className="mt-7 rounded-2xl bg-[#f4f1ea] p-5">
+                      <p className="font-serif text-xl leading-relaxed">{currentWord.example}</p>
+                      <p className="mt-2 text-sm leading-relaxed text-stone-500">
+                        {currentWord.exampleMeaning}
+                      </p>
+                    </div>
+                  )}
                   <div className="mt-5 flex items-start gap-3 text-sm text-stone-600">
                     <Sparkles className="mt-0.5 size-4 shrink-0 text-[#d65a31]" />
                     <p><span className="font-semibold">记忆钩子：</span>{currentWord.memoryTip}</p>
