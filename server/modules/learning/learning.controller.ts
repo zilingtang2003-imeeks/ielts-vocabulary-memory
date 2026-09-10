@@ -16,7 +16,7 @@ export class LearningController {
 
   @Get('dashboard')
   async getDashboard(@Req() req: Request): Promise<LearningDashboard> {
-    return this.learningService.getDashboard(req.userContext.userId);
+    return this.learningService.getDashboard(req.userContext?.userId);
   }
 
   @NeedLogin()

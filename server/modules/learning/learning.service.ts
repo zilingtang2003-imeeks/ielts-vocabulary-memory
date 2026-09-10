@@ -24,7 +24,18 @@ export class LearningService {
     private readonly db: PostgresJsDatabase,
   ) {}
 
-  async getDashboard(userId: string): Promise<LearningDashboard> {
+  async getDashboard(userId?: string): Promise<LearningDashboard> {
+    if (!userId) {
+      return {
+        isAnonymous: true,
+        chapters: VOCABULARY_CHAPTERS,
+        progress: [],
+        dueCount: 0,
+        learnedCount: 0,
+        masteredCount: 0,
+        streakDays: 0,
+      };
+    }
     const rows: typeof learningProgress.$inferSelect[] = await this.db
       .select()
       .from(learningProgress)
@@ -54,6 +65,7 @@ export class LearningService {
     );
 
     return {
+      isAnonymous: false,
       chapters: VOCABULARY_CHAPTERS,
       progress,
       dueCount,

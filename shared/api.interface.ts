@@ -32,6 +32,7 @@ export interface LearningProgressItem {
 }
 
 export interface LearningDashboard {
+  isAnonymous: boolean;
   chapters: VocabularyChapter[];
   progress: LearningProgressItem[];
   dueCount: number;

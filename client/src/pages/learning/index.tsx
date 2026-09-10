@@ -44,6 +44,60 @@ const RATING_OPTIONS: RatingOption[] = [
   { rating: 'easy', label: '熟练', hint: '跨越两个阶段', className: 'border-indigo-200 text-indigo-700 hover:bg-indigo-50' },
 ];
 
+const ANONYMOUS_PROGRESS_KEY: string = 'ielts-vocabulary-progress-v1';
+
+const loadAnonymousProgress = (): LearningProgressItem[] => {
+  try {
+    const stored: string | null = window.localStorage.getItem(
+      ANONYMOUS_PROGRESS_KEY,
+    );
+    if (!stored) return [];
+    const value: unknown = JSON.parse(stored);
+    return Array.isArray(value) ? (value as LearningProgressItem[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveAnonymousProgress = (progress: LearningProgressItem[]): void => {
+  window.localStorage.setItem(ANONYMOUS_PROGRESS_KEY, JSON.stringify(progress));
+};
+
+const getAnonymousReview = (
+  wordKey: string,
+  chapterId: number,
+  rating: ReviewRating,
+  previous?: LearningProgressItem,
+): LearningProgressItem => {
+  const intervals: number[] = [0, 8, 24, 48, 96, 168, 360, 720];
+  const currentStage: number = previous?.stage ?? 0;
+  const nextStage: number = rating === 'again'
+    ? 0
+    : rating === 'hard'
+      ? Math.max(1, currentStage)
+      : Math.min(
+        currentStage + (rating === 'easy' ? 2 : 1),
+        intervals.length - 1,
+      );
+  const now: Date = new Date();
+  const nextReviewAt: Date = new Date(
+    now.getTime() + intervals[nextStage] * 60 * 60 * 1000,
+  );
+  return {
+    wordKey,
+    chapterId,
+    stage: nextStage,
+    status: nextStage >= intervals.length - 1 ? 'mastered' : 'learning',
+    correctCount: (previous?.correctCount ?? 0) +
+      (rating === 'again' ? 0 : 1),
+    wrongCount: (previous?.wrongCount ?? 0) +
+      (rating === 'again' ? 1 : 0),
+    lastRating: rating,
+    lastReviewedAt: now.toISOString(),
+    nextReviewAt: nextReviewAt.toISOString(),
+  };
+};
+
 const LearningPage: React.FC = () => {
   const [dashboard, setDashboard] = useState<LearningDashboard | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -83,7 +137,24 @@ const LearningPage: React.FC = () => {
     setLoading(true);
     try {
       const data: LearningDashboard = await getDashboard();
-      setDashboard(data);
+      if (data.isAnonymous) {
+        const progress: LearningProgressItem[] = loadAnonymousProgress();
+        const now: Date = new Date();
+        setDashboard({
+          ...data,
+          progress,
+          dueCount: progress.filter(
+            (item: LearningProgressItem): boolean =>
+              new Date(item.nextReviewAt) <= now,
+          ).length,
+          learnedCount: progress.length,
+          masteredCount: progress.filter(
+            (item: LearningProgressItem): boolean => item.status === 'mastered',
+          ).length,
+        });
+      } else {
+        setDashboard(data);
+      }
     } catch (error) {
       toast.error(`无法加载学习数据：${String(error)}`);
     } finally {
@@ -126,6 +197,40 @@ const LearningPage: React.FC = () => {
     if (!chapter || !currentWord || saving) return;
     setSaving(true);
     try {
+      if (dashboard?.isAnonymous) {
+        const progress: LearningProgressItem = getAnonymousReview(
+          currentWord.key,
+          chapter.id,
+          rating,
+          progressMap.get(currentWord.key),
+        );
+        const nextProgress: LearningProgressItem[] = [
+          ...dashboard.progress.filter(
+            (item: LearningProgressItem): boolean =>
+              item.wordKey !== currentWord.key,
+          ),
+          progress,
+        ];
+        saveAnonymousProgress(nextProgress);
+        setDashboard({
+          ...dashboard,
+          progress: nextProgress,
+          learnedCount: nextProgress.length,
+          masteredCount: nextProgress.filter(
+            (item: LearningProgressItem): boolean =>
+              item.status === 'mastered',
+          ).length,
+        });
+        toast.success('复习计划已保存在当前设备');
+        if (wordIndex < chapter.words.length - 1) {
+          setWordIndex((current: number): number => current + 1);
+          setRevealed(false);
+        } else {
+          setViewMode('dashboard');
+          toast.success('本章学习完成');
+        }
+        return;
+      }
       const response = await submitReview({
         wordKey: currentWord.key,
         chapterId: chapter.id,
